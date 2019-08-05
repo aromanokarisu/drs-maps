@@ -4,6 +4,10 @@
 ```
 npm install
 ```
+```
+touch .env
+echo VUE_APP_GOOGLE_MAPS_API_KEY={{GOOGLE MAPSのAPIキー}} > .env
+```
 
 ### Compiles and hot-reloads for development
 ```
@@ -27,4 +31,3 @@ npm run lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
-# drs-maps

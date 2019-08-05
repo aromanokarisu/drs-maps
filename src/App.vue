@@ -9,8 +9,6 @@ export default {
   name: 'App',
   async mounted() {
     try {
-      console.log(process.env.VUE_APP_HOGE);
-
       const google = await gmapsInit();
       const geocoder = new google.maps.Geocoder();
       const map = new google.maps.Map(this.$el);

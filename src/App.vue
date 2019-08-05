@@ -1,28 +1,44 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+  <div class="App"/>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import gmapsInit from './utils/gmaps';
 
 export default {
-  name: 'app',
-  components: {
-    HelloWorld
-  }
-}
+  name: 'App',
+  async mounted() {
+    try {
+      console.log(process.env.VUE_APP_HOGE);
+
+      const google = await gmapsInit();
+      const geocoder = new google.maps.Geocoder();
+      const map = new google.maps.Map(this.$el);
+
+      geocoder.geocode({ address: 'Tokyo' }, (results, status) => {
+        if (status !== 'OK' || !results[0]) {
+          throw new Error(status);
+        }
+
+        map.setCenter(results[0].geometry.location);
+        map.fitBounds(results[0].geometry.viewport);
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  },
+};
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.App {
+  width: 100vw;
+  height: 100vh;
 }
 </style>

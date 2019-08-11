@@ -9,7 +9,14 @@ export default {
   name: 'App',
   async mounted() {
     var locations = []; // 現在地
+    var shops     = []; // 店舗情報
     try {
+      // 店舗情報を取得
+      await this.$axios.get(process.env.VUE_APP_GET_SHOPS_API)
+        .then(response => shops = response.data.data)
+        .catch(error => console.log(error));
+      console.log(shops);
+
       // 現在地の取得
       navigator.geolocation.getCurrentPosition(
         (position) => {   // 成功時処理
@@ -43,9 +50,10 @@ export default {
         }
       );
 
-      const google = await gmapsInit();
+      // マップ表示
+      const google   = await gmapsInit();
       const geocoder = new google.maps.Geocoder();
-      const map = new google.maps.Map(this.$el);
+      const map      = new google.maps.Map(this.$el);
 
       geocoder.geocode({ address: 'Tokyo' }, (results, status) => {
         if (status !== 'OK' || !results[0]) {
@@ -57,7 +65,7 @@ export default {
 
         // マーカークリックでズームする
         const markerClickHandler = (marker) => {
-          map.setZoom(13);
+          map.setZoom(16);
           map.setCenter(marker.getPosition());
         };
 

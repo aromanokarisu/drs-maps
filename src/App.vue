@@ -21,6 +21,7 @@ export default {
           }];
         },
         (error) => {  // 失敗時処理
+          /* eslint-disable */
           console.log('error');
           switch (error.code) {
             case error.PERMISSION_DENIED:
@@ -37,7 +38,7 @@ export default {
           }
         },
         { // options
-          timeout: 10000,           // タイムアウト(ミリ秒)
+          timeout: 100000,          // タイムアウト(ミリ秒)
           enableHighAccuracy: true, // 精度の高い位置情報を取得
         }
       );
@@ -54,8 +55,18 @@ export default {
         map.setCenter(results[0].geometry.location);
         map.fitBounds(results[0].geometry.viewport);
 
+        // マーカークリックでズームする
+        const markerClickHandler = (marker) => {
+          map.setZoom(13);
+          map.setCenter(marker.getPosition());
+        };
+
         // 現在地にマーカーを立てる
-        const markers = locations.map(x => new google.maps.Marker({ ...x, map }));
+        const markers = locations.map((location) => {
+          const marker = new google.maps.Marker({ ...location, map });
+          marker.addListener('click', () => markerClickHandler(marker));
+          return marker;
+        });
       });
     } catch (error) {
       /* eslint-disable */

@@ -7,6 +7,7 @@ npm install
 ```
 touch .env
 echo VUE_APP_GOOGLE_MAPS_API_KEY={{GOOGLE MAPSのAPIキー}} > .env
+echo VUE_APP_GET_SHOPS_API={{店舗APIエンドポイントURL}} > .env
 ```
 
 ### Compiles and hot-reloads for development

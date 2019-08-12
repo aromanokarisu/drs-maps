@@ -1,5 +1,13 @@
 # drs-maps
 
+## Description
+
+DANCERUSH STARDOMの設置店舗を表示するアプリ
+
+## Image
+
+<img width="402" alt="20190813" src="https://user-images.githubusercontent.com/17407690/62876746-a092dc00-bd60-11e9-80e0-3360276d12f9.png">
+
 ## Project setup
 ```
 npm install

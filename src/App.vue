@@ -8,24 +8,50 @@ import gmapsInit from './utils/gmaps';
 export default {
   name: 'App',
   async mounted() {
+    const google   = await gmapsInit();
+    const geocoder = new google.maps.Geocoder();
+    const map      = new google.maps.Map(this.$el);
+
     var locations = []; // 現在地
     var shops     = []; // 店舗情報
+
     try {
       // 店舗情報を取得
       await this.$axios.get(process.env.VUE_APP_GET_SHOPS_API)
-        .then(response => shops = response.data.data)
-        .catch(error => console.log(error));
-      console.log(shops);
+        .then(
+          response => shops = response.data.data
+        )
+        .catch(
+          /* eslint-disable */
+          error => console.log(error)
+        );
+      // 住所から緯度経度を取得
+      shops.forEach(shop => {
+        console.log(shop.address);
+        geocoder.geocode({ address: shop.address }, (results, status) => {
+          if (status === google.maps.GeocoderStatus.OK) {
+            locations.push({
+              position: {
+                lat: results[0].geometry.location.lat(),
+                lng: results[0].geometry.location.lng(),
+              }
+            });
+          } else {
+            /* eslint-disable */
+            console.log('error: geocode doesnt get latlng.');
+          }
+        });
+      });
 
       // 現在地の取得
       navigator.geolocation.getCurrentPosition(
-        (position) => {   // 成功時処理
-          locations = [{  // 現在地設定
+        (position) => {    // 成功時処理
+          locations.push({ // 現在地設定
             position: {
               lat: position.coords.latitude,
               lng: position.coords.longitude,
-            },
-          }];
+            }
+          });
         },
         (error) => {  // 失敗時処理
           /* eslint-disable */
@@ -50,11 +76,7 @@ export default {
         }
       );
 
-      // マップ表示
-      const google   = await gmapsInit();
-      const geocoder = new google.maps.Geocoder();
-      const map      = new google.maps.Map(this.$el);
-
+      // マップにマーカー描画
       geocoder.geocode({ address: 'Tokyo' }, (results, status) => {
         if (status !== 'OK' || !results[0]) {
           throw new Error(status);
@@ -82,6 +104,7 @@ export default {
     }
   },
 };
+
 </script>
 
 <style>

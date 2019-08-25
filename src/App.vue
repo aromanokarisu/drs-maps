@@ -76,8 +76,9 @@ export default {
           var map = new google.maps.Map(
             this.$el, // マップを表示する要素
             {
-              zoom:   15,           // 拡大倍率
-              center: currentLatLng // 緯度・経度
+              zoom:   15,                // 拡大倍率
+              center: currentLatLng,     // 緯度・経度
+              gestureHandling: 'greedy', // 一本指でマップ移動
             }
           );
 

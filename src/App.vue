@@ -10,7 +10,6 @@ export default {
   async mounted() {
     const google   = await gmapsInit();
     const geocoder = new google.maps.Geocoder();
-    const map      = new google.maps.Map(this.$el);
 
     var locations = []; // 現在地
     var shops     = []; // 店舗情報
@@ -25,32 +24,90 @@ export default {
           /* eslint-disable */
           error => console.log(error)
         );
-      // 住所から緯度経度を取得
+
+      // 店舗情報の店舗名、住所、緯度、経度を描画用の連想配列に整形
       shops.forEach(shop => {
-        console.log(shop.address);
-        geocoder.geocode({ address: shop.address }, (results, status) => {
-          if (status === google.maps.GeocoderStatus.OK) {
-            locations.push({
-              position: {
-                lat: results[0].geometry.location.lat(),
-                lng: results[0].geometry.location.lng(),
-              }
-            });
-          } else {
-            /* eslint-disable */
-            console.log('error: geocode doesnt get latlng.');
+        // 店舗名と描画のパラメータ設定
+        var location = {
+          animation: google.maps.Animation.DROP, // 上から落ちてくるアニメーション
+          label: {
+            text: shop.name,
+            color: "black",
+            fontWeight: "bold",
+            fontSize: "12px",
+          },
+          icon: {
+            url: "images/red-dot.png",
+          },
+          position: {
+            lat: 0.0,
+            lng: 0.0,
           }
-        });
+        };
+        // 緯度経度の設定
+        if ((typeof shop.lat == 'number') && (typeof shop.lng == 'number')) {
+          // APIのレスポンスに緯度経度がある場合はそのまま設定
+          location['position']['lat'] = shop.lat;
+          location['position']['lng'] = shop.lng;
+        } else {
+          // APIレスポンスに緯度経度がないときは住所から緯度経度を取得して設定
+          geocoder.geocode({ address: shop.address }, (results, status) => {
+            if (status === google.maps.GeocoderStatus.OK) {
+              location['position']['lat'] = results[0].geometry.location.lat();
+              location['position']['lng'] = results[0].geometry.location.lng();
+            } else {
+              /* eslint-disable */
+              console.log('error: geocode doesnt get latlng.');
+            }
+          });
+        }
+        locations.push(location);
       });
 
-      // 現在地の取得
+      // 現在地設定後、マップにマーカー描画
       navigator.geolocation.getCurrentPosition(
         (position) => {    // 成功時処理
+          // 現在地の緯度経度取得
+          var currentLat = position.coords.latitude;
+          var currentLng = position.coords.longitude;
+
+          // 現在地を元にマップを初期化
+          var currentLatLng = new google.maps.LatLng(currentLat, currentLng);
+          var map = new google.maps.Map(
+            this.$el, // マップを表示する要素
+            {
+              zoom:   15,           // 拡大倍率
+              center: currentLatLng // 緯度・経度
+            }
+          );
+
+          // マップに描画される設定
           locations.push({ // 現在地設定
             position: {
               lat: position.coords.latitude,
               lng: position.coords.longitude,
-            }
+            },
+            animation: google.maps.Animation.DROP, // 上から落ちてくるアニメーション
+            label: {
+              text: "現在地",
+              color: "black",
+              fontWeight: "bold",
+              fontSize: "16px",
+            },
+            icon: {
+              url: "images/blue-dot.png",
+            },
+          });
+
+          // マップにマーカーを立てる
+          const markers = locations.map((location) => {
+            const marker = new google.maps.Marker({ ...location, map });
+            marker.addListener('click', () => {
+              // クリックでズームする
+              map.setZoom(16);
+              map.setCenter(marker.getPosition());
+            });
+            return marker;
           });
         },
         (error) => {  // 失敗時処理
@@ -75,29 +132,6 @@ export default {
           enableHighAccuracy: true, // 精度の高い位置情報を取得
         }
       );
-
-      // マップにマーカー描画
-      geocoder.geocode({ address: 'Tokyo' }, (results, status) => {
-        if (status !== 'OK' || !results[0]) {
-          throw new Error(status);
-        }
-
-        map.setCenter(results[0].geometry.location);
-        map.fitBounds(results[0].geometry.viewport);
-
-        // マーカークリックでズームする
-        const markerClickHandler = (marker) => {
-          map.setZoom(16);
-          map.setCenter(marker.getPosition());
-        };
-
-        // 現在地にマーカーを立てる
-        const markers = locations.map((location) => {
-          const marker = new google.maps.Marker({ ...location, map });
-          marker.addListener('click', () => markerClickHandler(marker));
-          return marker;
-        });
-      });
     } catch (error) {
       /* eslint-disable */
       console.error(error);

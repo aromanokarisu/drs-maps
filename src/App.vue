@@ -27,41 +27,21 @@ export default {
 
       // 店舗情報の店舗名、住所、緯度、経度を描画用の連想配列に整形
       shops.forEach(shop => {
-        // 店舗名と描画のパラメータ設定
-        var location = {
-          animation: google.maps.Animation.DROP, // 上から落ちてくるアニメーション
-          label: {
-            text: shop.name,
-            color: "black",
-            fontWeight: "bold",
-            fontSize: "12px",
-          },
-          icon: {
-            url: "images/red-dot.png",
-          },
-          position: {
-            lat: 0.0,
-            lng: 0.0,
-          }
-        };
         // 緯度経度の設定
         if ((typeof shop.lat == 'number') && (typeof shop.lng == 'number')) {
           // APIのレスポンスに緯度経度がある場合はそのまま設定
-          location['position']['lat'] = shop.lat;
-          location['position']['lng'] = shop.lng;
+          locations.push(this.getFormattedLocation(shop.name, shop.lat, shop.lng, 'red'));
         } else {
           // APIレスポンスに緯度経度がないときは住所から緯度経度を取得して設定
           geocoder.geocode({ address: shop.address }, (results, status) => {
             if (status === google.maps.GeocoderStatus.OK) {
-              location['position']['lat'] = results[0].geometry.location.lat();
-              location['position']['lng'] = results[0].geometry.location.lng();
+              locations.push(this.getFormattedLocation(shop.name, results[0].geometry.location.lat(), results[0].geometry.location.lng(), 'red'));
             } else {
               /* eslint-disable */
               console.log('error: geocode doesnt get latlng.');
             }
           });
         }
-        locations.push(location);
       });
 
       // 現在地設定後、マップにマーカー描画
@@ -76,29 +56,14 @@ export default {
           var map = new google.maps.Map(
             this.$el, // マップを表示する要素
             {
-              zoom:   15,                // 拡大倍率
+              zoom: 15,                  // 拡大倍率
               center: currentLatLng,     // 緯度・経度
               gestureHandling: 'greedy', // 一本指でマップ移動
             }
           );
 
-          // マップに描画される設定
-          locations.push({ // 現在地設定
-            position: {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            },
-            animation: google.maps.Animation.DROP, // 上から落ちてくるアニメーション
-            label: {
-              text: "現在地",
-              color: "black",
-              fontWeight: "bold",
-              fontSize: "16px",
-            },
-            icon: {
-              url: "images/blue-dot.png",
-            },
-          });
+          // 現在地をマーカーに追加
+          locations.push(this.getFormattedLocation('現在地', currentLat, currentLng, 'blue'));
 
           // マップにマーカーを立てる
           const markers = locations.map((location) => {
@@ -112,8 +77,6 @@ export default {
           });
         },
         (error) => {  // 失敗時処理
-          /* eslint-disable */
-          console.log('error');
           switch (error.code) {
             case error.PERMISSION_DENIED:
               alert('位置情報の提供を許可してください');
@@ -138,6 +101,31 @@ export default {
       console.error(error);
     }
   },
+  methods: {
+    getFormattedLocation: function (lacationName, lat, lng, iconColor = 'red') {
+      // アイコンの選択 red or bule
+      var iconUrl = (iconColor == 'blue') ? 'images/blue-dot.png' : 'images/red-dot.png';
+
+      // フォーマット
+      var location = {
+        animation: google.maps.Animation.DROP, // 上から落ちてくるアニメーション
+        label: {
+          text:       lacationName,
+          color:      'black',
+          fontWeight: 'bold',
+          fontSize:   '12px',
+        },
+        icon: {
+          url: iconUrl,
+        },
+        position: {
+          lat: lat,
+          lng: lng,
+        }
+      };
+      return location;
+    }
+  }
 };
 
 </script>
